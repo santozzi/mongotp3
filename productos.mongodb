@@ -1,0 +1,2 @@
+use ('tiendaOnline');
+db.productos.find();

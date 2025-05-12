@@ -1,0 +1,49 @@
+use ('tiendaOnline');
+//promedio maximo y minimo por categoria de productos
+/*
+ Operadores comunes en $group y qué hacen
+Operador	Qué hace	Ejemplo de uso
+$sum	Suma los valores de un campo	{ total: { $sum: "$cantidad" } }
+$avg	Calcula el promedio	{ promedio: { $avg: "$nota" } }
+$min	Devuelve el valor mínimo	{ menorEdad: { $min: "$edad" } }
+$max	Devuelve el valor máximo	{ mayorEdad: { $max: "$edad" } }
+$push	Crea un array con los valores de un campo	{ listaNombres: { $push: "$nombre" } }
+$addToSet	Igual que $push, pero sin duplicados	{ ciudades: { $addToSet: "$ciudad" } }
+$first	Primer valor según el orden de entrada	{ primero: { $first: "$nombre" } }
+$last	Último valor según el orden de entrada	{ ultimo: { $last: "$nombre" } }
+$count (especial)	Equivalente a { $sum: 1 } para contar documentos agrupados	{ conteo: { $sum: 1 } }
+
+*/
+
+
+
+db.productos.aggregate([
+    {
+        $group: {
+            _id: "$categoria",
+            promedioPrecio: { $avg: "$precio" },
+            maximoPrecio: { $max: "$precio" },
+            minimoPrecio: { $min: "$precio" }
+        }
+    },
+    {
+        $sort: { promedioPrecio: 1 }
+    }
+]);
+//Obtener el total de ventas por país del cliente, incluyendo la cantidad de transacciones y el monto total.
+
+db.ventas.aggregate([
+    {
+        $group: {
+            _id: "$cliente.pais",
+            //cada transaccion puede terner varios productos en venta
+            totalTransacciones: { $sum: 1 },
+            //por cantidad de productos vendidos
+            cantidadDeProductos: { $sum: "$cantidad" },
+            montoTotal: { $sum: "$total" }
+        }
+    },
+    {
+        $sort: { montoTotal: -1 }
+    }
+]);
