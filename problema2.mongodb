@@ -1,0 +1,34 @@
+
+/**
+ * Crear un pipeline que obtenga las ventas totales por mes, 
+ * indicando también el producto más vendido de cada mes.
+ */
+use ('tiendaOnline');
+db.ventas.aggregate([
+    {
+ $addFields:{
+    mes:{$month:"$fecha"}
+ }
+    },
+  {
+    $facet:{
+        "fechaPrueba":[
+            {
+                $group:{
+                    _id: "$mes"
+                }
+            }
+        ],
+        "productosPrueba":[
+            {
+                $group:{
+                    _id:"$producto_id"
+                }
+            }
+        ]
+    }
+  }
+   
+    
+   
+])
