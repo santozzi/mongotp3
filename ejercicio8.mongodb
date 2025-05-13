@@ -1,42 +1,49 @@
 use ('tiendaOnline');
-db.productos.aggregate([
-    {
-        $project:{
-            _id:1,
-            nombre:1,
-            categoria:1,
-            precio:1,
-            categoria_producto:{
-                $cond:[
-                    {$lt:["$precio",100]},"Económico",
-                    {$cond:[{
-                        $lte:["$precio",500]
-                    },"Estandar","Premium"]
-                    }
-                ]
-            }
-        }
-    }
-]);
 db.ventas.aggregate([
     {
         $project:{
-            _id:1,
+            _id:"$producto_id",
             total:1,
-            tamanioVenta:{
-                $cond:[
-                    {$lt:["$total",200]},"Pequeña",
-                    {
-                      $cond:[
-                        {$and:[{$gte:["$total",200]},{$lte:["$total",800]}]},"Mediana",
-                        "Grande"
-                      ]  
-                    }
-                ]
-            }
+            masVendidos: {$sum: "$cantidad"}
         }
     },
     {
-        $sort:{total: -1}
+        $sort:{masVendidos: -1}
+    },
+    {
+        $limit:3
+    },
+    {
+        $lookup: {
+          from: "productos",
+          localField: "_id",
+          foreignField: "_id",
+          as: "producto"
+        }
+    },
+    {
+        $unwind: "$producto"
+    },
+    {
+        $project:{
+            _id:1,
+            masVendidos:1,
+            nombreProducto: "$producto.nombre",
+            categoriaProducto:"$producto.categoria",
+            valoraciones:"$producto.valoraciones",
+            montoTotal: {$sum:"$total"}
+            
+        }
+    },
+    {
+        $unwind:"$valoraciones"
+    },
+    {
+        $group: {
+            _id: "$nombreProducto",
+            promedioDeValoraciones: {$avg:"$valoraciones.puntuacion"}
+        },
+
     }
-])
+    
+]);
